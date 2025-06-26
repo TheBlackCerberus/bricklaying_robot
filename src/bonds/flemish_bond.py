@@ -105,10 +105,13 @@ def calculate_flemish_bond(wall: Wall, config: Config) -> list[Brick]:
             brick_type_cycle = ["full", "half"]
             position_in_pattern = 0
             
-            while x_pos < wall_width:
+            
+            ending_pattern_space = quarter_length + head_joint + half_length
+            
+            while x_pos < (wall_width - ending_pattern_space):
                 brick_type = brick_type_cycle[position_in_pattern % 2]
                 
-                if brick_type == "full" and x_pos + full_length <= wall_width:
+                if brick_type == "full" and x_pos + full_length + head_joint <= wall_width - ending_pattern_space:
                     brick = Brick(
                         id=brick_id,
                         brick_type="full",
@@ -118,7 +121,7 @@ def calculate_flemish_bond(wall: Wall, config: Config) -> list[Brick]:
                     brick_id += 1
                     x_pos += full_length + head_joint
                     
-                elif brick_type == "half" and x_pos + half_length <= wall_width:
+                elif brick_type == "half" and x_pos + half_length + head_joint <= wall_width - ending_pattern_space:
                     brick = Brick(
                         id=brick_id,
                         brick_type="half",
@@ -128,39 +131,32 @@ def calculate_flemish_bond(wall: Wall, config: Config) -> list[Brick]:
                     brick_id += 1
                     x_pos += half_length + head_joint
                     
-                else:
-                    # Check if we can fit ending pattern: quarter + half
-                    if (x_pos + quarter_length + head_joint + half_length <= wall_width):
-                        # Add quarter brick
-                        brick = Brick(
-                            id=brick_id,
-                            brick_type="quarter",
-                            position=Position(x_pos, y_pos)
-                        )
-                        bricks_in_course.append(brick)
-                        brick_id += 1
-                        x_pos += quarter_length + head_joint
-                        
-                        # Add final half brick
-                        brick = Brick(
-                            id=brick_id,
-                            brick_type="half",
-                            position=Position(x_pos, y_pos)
-                        )
-                        bricks_in_course.append(brick)
-                        brick_id += 1
-                    elif x_pos + quarter_length <= wall_width:
-                        # Only quarter brick fits
-                        brick = Brick(
-                            id=brick_id,
-                            brick_type="quarter",
-                            position=Position(x_pos, y_pos)
-                        )
-                        bricks_in_course.append(brick)
-                        brick_id += 1
+                else:  
                     break
                     
                 position_in_pattern += 1
+            
+            # 4. Add ending pattern: quarter, half
+            # Add quarter brick
+            if x_pos + quarter_length <= wall_width:
+                brick = Brick(
+                    id=brick_id,
+                    brick_type="quarter",
+                    position=Position(x_pos, y_pos)
+                )
+                bricks_in_course.append(brick)
+                brick_id += 1
+                x_pos += quarter_length + head_joint
+                
+                # Add half brick (final brick)
+                if x_pos + half_length <= wall_width:
+                    brick = Brick(
+                        id=brick_id,
+                        brick_type="half",
+                        position=Position(x_pos, y_pos)
+                    )
+                    bricks_in_course.append(brick)
+                    brick_id += 1
         
         brick_list.extend(bricks_in_course)
     
