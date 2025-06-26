@@ -1,7 +1,8 @@
 from enum import Enum
 from dataclasses import dataclass
 from .common import Position
-from ..constants import FULL_BRICK_LENGTH, HALF_BRICK_LENGTH, FULL_BRICK_HEIGHT
+from ..configs.config import Config, BrickDimensions
+from typing import ClassVar
 
 
 class BrickType(Enum):
@@ -17,17 +18,30 @@ class BrickState(Enum):
 @dataclass
 class Brick:
     id: int
-    type: BrickType
+    brick_type: str 
     position: Position
     state: BrickState = BrickState.PLANNED
+    stride_id: int | None = None
 
+    # Class-level config 
+    _brick_configs: ClassVar[dict[str, BrickDimensions]] = {}
+
+    @classmethod
+    def configure(cls, config: Config) -> None:
+        """Configure all brick types from config"""
+        cls._brick_configs = config['bricks']
+    
     @property
     def width(self) -> float:
-        return FULL_BRICK_LENGTH if self.type == BrickType.FULL else HALF_BRICK_LENGTH
+        return self._brick_configs[self.brick_type]['width']
+
+    @property  
+    def length(self) -> float:
+        return self._brick_configs[self.brick_type]['length']
 
     @property
     def height(self) -> float:
-        return FULL_BRICK_HEIGHT
+        return self._brick_configs[self.brick_type]['height']
 
     @property
     def center(self) -> Position:

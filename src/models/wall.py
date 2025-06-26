@@ -1,46 +1,45 @@
 from .brick import Brick, BrickState
-from ..constants import (
-    WALL_WIDTH,
-    WALL_HEIGHT,
-    COURSE_HEIGHT,
-    FULL_BRICK_LENGTH,
-    HALF_BRICK_LENGTH,
-    HEAD_JOINT,
-)
+from ..configs.config import Config
 
 
 class Wall:
-    def __init__(self, width: float = WALL_WIDTH, height: float = WALL_HEIGHT) -> None:
-        self.width: float = width
-        self.height: float = height
+    def __init__(self, config: Config) -> None:
+        self.width: float = config['wall']['width']
+        self.height: float = config['wall']['height']
+        self.config = config  
         self.bricks: list[Brick] = []
         self.brick_grid: dict[tuple[int, int], Brick] = {}  # (row, col) -> Brick
 
     def add_brick(self, brick: Brick) -> None:
         """Add a brick to the wall"""
+        course_height = self.config['joints']['bed_joint'] + self.config['bricks']['full']['height']
         self.bricks.append(brick)
-        row = int(brick.position.y / COURSE_HEIGHT)
+        row = int(brick.position.y / course_height)
         col = self._calculate_column(brick.position.x, row)
         self.brick_grid[(row, col)] = brick
 
     def _calculate_column(self, x_position: float, row: int) -> int:
         """Calculate which column a brick belongs to based on x position.
 
-        TODO: This is the strecher bond
+        TODO: This is the stretcher bond
         """
+        half_brick_length = self.config['bricks']['half']['length']
+        full_brick_length = self.config['bricks']['full']['length']
+        head_joint = self.config['joints']['head_joint']
+        
         # For stretcher bond, odd rows are offset
         is_offset_row = row % 2 == 1
 
         if is_offset_row:
             # Offset rows: half, full, full ...
-            if x_position < HALF_BRICK_LENGTH:
+            if x_position < half_brick_length:
                 return 0  # First half brick
             else:
-                adjusted_x = x_position - HALF_BRICK_LENGTH - HEAD_JOINT
-                return 1 + int(adjusted_x / (FULL_BRICK_LENGTH + HEAD_JOINT))
+                adjusted_x = x_position - half_brick_length - head_joint
+                return 1 + int(adjusted_x / (full_brick_length + head_joint))
         else:
             # Normal rows: full, full, full...
-            return int(x_position / (FULL_BRICK_LENGTH + HEAD_JOINT))
+            return int(x_position / (full_brick_length + head_joint))
 
     def get_brick_at_position(self, x: float, y: float) -> Brick | None:
         """Get brick at specific coordinates"""
@@ -70,10 +69,11 @@ class Wall:
 
     def get_bricks_in_course(self, course: int) -> list[Brick]:
         """Get all bricks in a specific course (row)"""
+        course_height = self.config['joints']['bed_joint'] + self.config['bricks']['full']['height']
         return [
             brick
             for brick in self.bricks
-            if int(brick.position.y / COURSE_HEIGHT) == course
+            if int(brick.position.y / course_height) == course
         ]
 
     def validate_brick_placement(self, brick: Brick) -> bool:
@@ -95,9 +95,10 @@ class Wall:
 
     def _bricks_overlap(self, brick1: Brick, brick2: Brick) -> bool:
         """Check if two bricks overlap (accounting for joints)"""
+        head_joint = self.config['joints']['head_joint']
         return not (
-            brick1.position.x + brick1.width + HEAD_JOINT <= brick2.position.x
-            or brick2.position.x + brick2.width + HEAD_JOINT <= brick1.position.x
+            brick1.position.x + brick1.width + head_joint <= brick2.position.x
+            or brick2.position.x + brick2.width + head_joint <= brick1.position.x
             or brick1.position.y + brick1.height <= brick2.position.y
             or brick2.position.y + brick2.height <= brick1.position.y
         )
@@ -105,7 +106,8 @@ class Wall:
     @property
     def num_courses(self) -> int:
         """Calculate number of courses that fit in wall height"""
-        return int(self.height / COURSE_HEIGHT)
+        course_height = self.config['joints']['bed_joint'] + self.config['bricks']['full']['height']
+        return int(self.height / course_height)
 
     @property
     def total_bricks(self) -> int:
