@@ -1,4 +1,4 @@
-name: "english_cross_bond_wall"
+name: "flemish_bond_wall"
 
 bricks:
   full:
@@ -21,7 +21,7 @@ joints:
   bed_joint: 12.5
 
 wall:
-  width:  1970
+  width:  1860
   height: 2000
 
 robot:

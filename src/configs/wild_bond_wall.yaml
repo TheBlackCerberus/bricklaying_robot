@@ -1,0 +1,29 @@
+name: "wild_bond_wall"
+
+bricks:
+  full:
+    width: 100
+    length: 210
+    height: 50
+  
+  half:
+    width: 100
+    length: 100
+    height: 50
+  
+  quarter:
+    width: 100
+    length: 45
+    height: 50
+
+joints:
+  head_joint: 10
+  bed_joint: 12.5
+
+wall:
+  width: 1980
+  height: 2000
+
+robot:
+  reach_width: 800
+  reach_height: 1300
