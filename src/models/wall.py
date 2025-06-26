@@ -18,28 +18,22 @@ class Wall:
         col = self._calculate_column(brick.position.x, row)
         self.brick_grid[(row, col)] = brick
 
+    def try_add_brick(self, brick: Brick) -> bool:
+        """Try to add a brick with validation. Returns True if successful."""
+        if not self.is_brick_in_wall(brick):
+            # print(f"Brick {brick.id}, {brick.position.x}, {brick.position.y} is not in the wall")
+            return False
+        if not self.validate_brick_placement(brick):
+            return False
+        self.add_brick(brick)
+        return True
+
     def _calculate_column(self, x_position: float, row: int) -> int:
-        """Calculate which column a brick belongs to based on x position.
-
-        TODO: This is the stretcher bond
-        """
-        half_brick_length = self.config['bricks']['half']['length']
-        full_brick_length = self.config['bricks']['full']['length']
+        brick_lengths = [brick['length'] for brick in self.config['bricks'].values()]
+        min_brick_length = min(brick_lengths)
         head_joint = self.config['joints']['head_joint']
-        
-        # For stretcher bond, odd rows are offset
-        is_offset_row = row % 2 == 1
-
-        if is_offset_row:
-            # Offset rows: half, full, full ...
-            if x_position < half_brick_length:
-                return 0  # First half brick
-            else:
-                adjusted_x = x_position - half_brick_length - head_joint
-                return 1 + int(adjusted_x / (full_brick_length + head_joint))
-        else:
-            # Normal rows: full, full, full...
-            return int(x_position / (full_brick_length + head_joint))
+        unit_width = min_brick_length + head_joint
+        return int(x_position / unit_width)
 
     def get_brick_at_position(self, x: float, y: float) -> Brick | None:
         """Get brick at specific coordinates"""
@@ -62,7 +56,7 @@ class Wall:
             if (
                 x <= brick.position.x <= x + width
                 and y <= brick.position.y <= y + height
-                and brick.position.x + brick.width <= x + width
+                and brick.position.x + brick.length <= x + width
                 and brick.position.y + brick.height <= y + height
             )
         ]
@@ -80,13 +74,14 @@ class Wall:
         """Check if a brick can be placed without overlapping existing bricks"""
         for existing_brick in self.bricks:
             if self._bricks_overlap(brick, existing_brick):
+                # print(f"Brick {brick.id}, {brick.position.x}, {brick.position.y} overlaps with {existing_brick.id}, {existing_brick.position.x}, {existing_brick.position.y}")
                 return False
         return True
 
     def is_brick_in_wall(self, brick: Brick) -> bool:
         if (
             brick.position.x < 0
-            or brick.position.x + brick.width > self.width
+            or brick.position.x + brick.length > self.width
             or brick.position.y < 0
             or brick.position.y + brick.height > self.height
         ):
@@ -97,8 +92,8 @@ class Wall:
         """Check if two bricks overlap (accounting for joints)"""
         head_joint = self.config['joints']['head_joint']
         return not (
-            brick1.position.x + brick1.width + head_joint <= brick2.position.x
-            or brick2.position.x + brick2.width + head_joint <= brick1.position.x
+            brick1.position.x + brick1.length + head_joint <= brick2.position.x
+            or brick2.position.x + brick2.length + head_joint <= brick1.position.x
             or brick1.position.y + brick1.height <= brick2.position.y
             or brick2.position.y + brick2.height <= brick1.position.y
         )
