@@ -69,6 +69,10 @@ python -m src.main --debug
 ```bash
 python -m src.main --wall english_cross_bond_wall --scale 0.4 --debug
 ```
+**Tests:**
+```bash
+pytest src/tests
+```
 
 ### Interactive Controls
 

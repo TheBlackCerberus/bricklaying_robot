@@ -6,8 +6,8 @@ from ..configs.config import Config
 
 class Robot:
     def __init__(self, config: Config) -> None:
-        self.reach_width = config['robot']['reach_width']
-        self.reach_height = config['robot']['reach_height']
+        self.reach_width = config["robot"]["reach_width"]
+        self.reach_height = config["robot"]["reach_height"]
         self.position = Position(self.reach_width / 2, 0)
         self.movement_count = 0
         self.current_stride_id = 0
@@ -28,7 +28,7 @@ class Robot:
         """Check if robot can reach a brick based on its center position.
         With center-based reach, we can use simpler positioning since
         we don't need to worry about boundary bricks as much.
-        It's safe to assume that robot would pick up the brick 
+        It's safe to assume that robot would pick up the brick
         in the center of the brick.
         """
         x_min = self.position.x - self.reach_width / 2

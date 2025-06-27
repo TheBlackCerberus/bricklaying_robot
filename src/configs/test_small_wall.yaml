@@ -1,0 +1,21 @@
+wall:
+  width: 500 
+  height: 300 
+
+bricks:
+  full:
+    length: 215 
+    height: 65   
+    width: 102.5 
+  half:
+    length: 102.5 
+    height: 65   
+    width: 102.5 
+
+joints:
+  head_joint: 10 
+  bed_joint: 10  
+
+robot:
+  reach_width: 300 
+  reach_height: 200
