@@ -22,7 +22,10 @@ class Robot:
         return (x_min, y_min, x_max, y_max)
 
     def _get_brick_center(self, brick: Brick) -> tuple[float, float]:
-        return (brick.position.x + brick.width / 2, brick.position.y + brick.height / 2)
+        return (
+            brick.position.x + brick.width / 2, 
+            brick.position.y + brick.height / 2
+        )
 
     def can_reach_brick(self, brick: Brick) -> bool:
         """Check if robot can reach a brick based on its center position.

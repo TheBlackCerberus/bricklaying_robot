@@ -4,15 +4,17 @@ from ..configs.config import Config
 
 class Wall:
     def __init__(self, config: Config) -> None:
-        self.width: float = config['wall']['width']
-        self.height: float = config['wall']['height']
-        self.config = config  
+        self.width: float = config["wall"]["width"]
+        self.height: float = config["wall"]["height"]
+        self.config = config
         self.bricks: list[Brick] = []
         self.brick_grid: dict[tuple[int, int], Brick] = {}  # (row, col) -> Brick
 
     def add_brick(self, brick: Brick) -> None:
         """Add a brick to the wall"""
-        course_height = self.config['joints']['bed_joint'] + self.config['bricks']['full']['height']
+        course_height = (
+            self.config["joints"]["bed_joint"] + self.config["bricks"]["full"]["height"]
+        )
         self.bricks.append(brick)
         row = int(brick.position.y / course_height)
         col = self._calculate_column(brick.position.x, row)
@@ -29,9 +31,9 @@ class Wall:
         return True
 
     def _calculate_column(self, x_position: float, row: int) -> int:
-        brick_lengths = [brick['length'] for brick in self.config['bricks'].values()]
+        brick_lengths = [brick["length"] for brick in self.config["bricks"].values()]
         min_brick_length = min(brick_lengths)
-        head_joint = self.config['joints']['head_joint']
+        head_joint = self.config["joints"]["head_joint"]
         unit_width = min_brick_length + head_joint
         return int(x_position / unit_width)
 
@@ -63,7 +65,9 @@ class Wall:
 
     def get_bricks_in_course(self, course: int) -> list[Brick]:
         """Get all bricks in a specific course (row)"""
-        course_height = self.config['joints']['bed_joint'] + self.config['bricks']['full']['height']
+        course_height = (
+            self.config["joints"]["bed_joint"] + self.config["bricks"]["full"]["height"]
+        )
         return [
             brick
             for brick in self.bricks
@@ -90,7 +94,7 @@ class Wall:
 
     def _bricks_overlap(self, brick1: Brick, brick2: Brick) -> bool:
         """Check if two bricks overlap (accounting for joints)"""
-        head_joint = self.config['joints']['head_joint']
+        head_joint = self.config["joints"]["head_joint"]
         return not (
             brick1.position.x + brick1.length + head_joint <= brick2.position.x
             or brick2.position.x + brick2.length + head_joint <= brick1.position.x
@@ -101,7 +105,9 @@ class Wall:
     @property
     def num_courses(self) -> int:
         """Calculate number of courses that fit in wall height"""
-        course_height = self.config['joints']['bed_joint'] + self.config['bricks']['full']['height']
+        course_height = (
+            self.config["joints"]["bed_joint"] + self.config["bricks"]["full"]["height"]
+        )
         return int(self.height / course_height)
 
     @property
@@ -121,3 +127,36 @@ class Wall:
         if not self.bricks:
             return 0.0
         return len(self.built_bricks) / len(self.bricks) * 100
+
+    def validate_wall_integrity(self) -> bool:
+        """Validate the completed wall for proper construction"""
+        course_height = (
+            self.config["joints"]["bed_joint"] + self.config["bricks"]["full"]["height"]
+        )
+        used_height = self.num_courses * course_height
+        remaining_height = self.height - used_height
+
+        # Allow only bed joint
+        if remaining_height > self.config["joints"]["bed_joint"]:
+            print(f"Wall validation failed: Wasted height space ({remaining_height} units)")
+            return False
+
+        head_joint = self.config["joints"]["head_joint"]
+
+        for course in range(self.num_courses):
+            course_bricks = self.get_bricks_in_course(course)
+            if not course_bricks:
+                continue
+
+            rightmost_brick = max(course_bricks, key=lambda b: b.position.x + b.length)
+            remaining_space = self.width - (
+                rightmost_brick.position.x + rightmost_brick.length
+            )
+
+            if remaining_space > 0 and remaining_space != head_joint:
+                print(
+                    f"Wall validation failed: Course {course} has gap of {remaining_space}"
+                )
+                return False
+
+        return True

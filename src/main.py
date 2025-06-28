@@ -114,19 +114,13 @@ def main():
     failed_bricks = 0
     for brick in bricks:
         if not wall.try_add_brick(brick):
-            print(
-                f"Failed to add brick {brick.id}, {brick.position.x}, {brick.position.y}"
-            )
+            print(f"Failed to add brick {brick.id}, {brick.position.x}, {brick.position.y}")
             failed_bricks += 1
 
-    if failed_bricks > 0:
-        print(f"❌ Configuration Error: {failed_bricks} bricks failed validation")
-        print(
-            "💡 This indicates the wall configuration isn't suitable for this bond pattern"
-        )
-        print(
-            f"   Please adjust the wall configuration in: src/configs/{args.wall}.yaml"
-        )
+    if failed_bricks > 0 or not wall.validate_wall_integrity():
+        print("❌ Configuration Error: Wall validation failed")
+        print("💡 This indicates the wall configuration isn't suitable for this bond pattern")
+        print(f"   Please adjust the wall configuration in: src/configs/{args.wall}.yaml")
         return
 
     for brick in wall.bricks:
